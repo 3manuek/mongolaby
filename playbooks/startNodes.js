@@ -1,5 +1,8 @@
 // http://mongodb.github.io/node-mongodb-native/contents.html
 
+var replicationFactor = 3
+var shardFactor = 2
+
 
 var Docker = require('dockerode');
 var docker = new Docker({socketPath: '/var/run/docker.sock'});
@@ -32,8 +35,8 @@ var docker6 = new Docker({
 
 
 
-
-bash-3.2$ docker run --name mongo3 -d mongo:latest --smallfiles
+/*
+ bash-3.2$ docker run --name mongo3 -d mongo:latest --smallfiles
 29d427b541362f27a0e15c5b1e54e625a78fd79343538fe9947dd04bda453882
 
 
@@ -47,3 +50,6 @@ docker run \
 --smallfiles \
 --keyFile /opt/keyfile/mongodb-keyfile \
 --replSet "rs0"
+*/
+
+
