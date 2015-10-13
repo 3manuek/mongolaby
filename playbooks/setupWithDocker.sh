@@ -6,6 +6,8 @@
 # http://alexyu.se/content/2012/04/mongodb-quick-start-replica-sets-and-sharding
 
 tableOfServers=serverList.txt
+defaultMongoPort=27001        
+CONFIG_TAG="cfg"
 
 function create_shard(){
     shard=$1
@@ -30,19 +32,27 @@ function create_shard(){
     echo "${shard_name}/${HOSTNAME}:${port}"
 }
 
+function create_data_dir(){
+    mkdir -p $CONFIG_TAG/$1
+}
+
+
 function create_cluster(){
     num_shards=$1
     repl_factor=$2
+    config_servers=$3
 
     #Create config servers
     mkdir -p cfg/{1,2,3}
-    mongod --configsvr --smallfiles --nojournal --dbpath cfg/1 --port 26050 --fork --logpath cfg/1.log >/dev/null
-    mongod --configsvr --smallfiles --nojournal --dbpath cfg/2 --port 26051 --fork --logpath cfg/2.log >/dev/null
-    mongod --configsvr --smallfiles --nojournal --dbpath cfg/3 --port 26052 --fork --logpath cfg/3.log >/dev/null
+    docker run -it --link cfg1mongo:mongo --rm mongo sh -c "exec mongod --configsvr --smallfiles --nojournal --dbpath cfg/1 --port 26050 --fork --logpath cfg/1.log >/dev/null"
+    docker run -it --link cfg2mongo:mongo --rm mongo sh -c "exec mongod --configsvr --smallfiles --nojournal --dbpath cfg/2 --port 26051 --fork --logpath cfg/2.log >/dev/null"
+    docker run -it --link cfg3mongo:mongo --rm mongo sh -c "exec mongod --configsvr --smallfiles --nojournal --dbpath cfg/3 --port 26052 --fork --logpath cfg/3.log >/dev/null"
+
 
     #Create a single mongos server on the default port
     sleep 2
-    mongos --configdb ${HOSTNAME}:26050,${HOSTNAME}:26051,${HOSTNAME}:26052 --fork --logpath mongos.log >/dev/null
+  
+    docker run -it --link cfg1mongo:mongo --rm mongo sh -c "exec mongos --configdb ${HOSTNAME}:26050,${HOSTNAME}:26051,${HOSTNAME}:26052 --fork --logpath mongos.log >/dev/null"
 
     #Create shards
     init=""
