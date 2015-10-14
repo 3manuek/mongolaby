@@ -13,6 +13,7 @@ function create_shard(){
     shard_name="shard_${shard}"
     shard_dir=shard${shard}
     init='rs.initiate({_id:"'${shard_name}'",members:['
+
     mkdir ${shard_dir}
     for server in $(seq 1 $repl_factor); do
         port=$((26000+(shard-1)*repl_factor+server))
@@ -25,6 +26,7 @@ function create_shard(){
         init=${init}'{_id:'$((server-1))',host:"'${HOSTNAME}':'${port}'"}'
     done
     init=${init}']})'
+    sleep 3
     #Initialize the replication set
     mongo localhost:${port} --eval "${init}" >/dev/null
     echo "${shard_name}/${HOSTNAME}:${port}"
@@ -35,6 +37,7 @@ function create_cluster(){
     repl_factor=$2
 
     #Create config servers
+    echo "creating config"
     mkdir -p cfg/{1,2,3}
     mongod --configsvr --smallfiles --nojournal --dbpath cfg/1 --port 26050 --fork --logpath cfg/1.log >/dev/null
     mongod --configsvr --smallfiles --nojournal --dbpath cfg/2 --port 26051 --fork --logpath cfg/2.log >/dev/null
@@ -42,8 +45,10 @@ function create_cluster(){
 
     #Create a single mongos server on the default port
     sleep 2
+    echo "Starting mongos"
     mongos --configdb ${HOSTNAME}:26050,${HOSTNAME}:26051,${HOSTNAME}:26052 --fork --logpath mongos.log >/dev/null
-
+    
+    sleep 3
     #Create shards
     init=""
     for shard in $(seq 1 $num_shards); do
@@ -51,6 +56,8 @@ function create_cluster(){
         init=${init}"sh.addShard('${host}');"
     done
 
+    echo "Entering loop"
+    sleep 2
     #Wait for replication sets to initialize
     count=0
     while [ "${count}" != "${num_shards}" ]; do
@@ -58,8 +65,10 @@ function create_cluster(){
         count=$(grep -l PRIMARY shard*/1.log|wc -l)
         echo -en "\rReplication sets ready: ${count} out of ${num_shards}"
     done
-    echo
-    mongo --shell --eval "${init}"
+
+    echo $init > init.js 
+    mongo  --shell --eval "${init}"
+    #mongo --shell --eval init.js 
 }
 
 if [ "$2" == "" ]; then
