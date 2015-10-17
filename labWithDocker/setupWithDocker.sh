@@ -22,7 +22,7 @@ function create_shard(){
         mkdir ${dir}
         #docker run -it --link mongo:mongo --rm mongo sh -p $port:$port -c "exec mongod --quiet --smallfiles --nojournal --oplogSize 50 --fork --port ${port} --dbpath ${dir} --logpath ${shard_dir}/${server}.log --replSet ${shard_name} >/dev/null"
         # Should start the container with the image, no -c option
-
+        docker run --name ${shard_name}-${server}-mongo -d mongo --quiet --smallfiles --nojournal --oplogSize 50 --fork --port ${port} --dbpath ${dir} --logpath ${shard_dir}/${server}.log --replSet ${shard_name} >/dev/null
         echo "$shard_name $port" >> $tableOfServers
 
         if test ${server} -gt 1; then
@@ -40,9 +40,9 @@ function createDataDir(){
     mkdir -p $CONFIG_TAG/$1
 }
 
-function startConfigServer() {
+function startConfigServer(){
     createDataDir($1)
-    docker run --name $1 -d mongo --configsvr --smallfiles --nojournal --dbpath cfg/1 --port 26050 --fork --logpath cfg/1.log >/dev/null
+    docker run --name $1 -d mongo --configsvr --smallfiles --nojournal --dbpath $2 --port 26050 --fork --logpath cfg/1.log >/dev/null
 }
 
 function startMongos() {
@@ -59,8 +59,8 @@ function create_cluster(){
     mkdir -p cfg/{1,2,3}
     # Start with the image options, call createDataDir
     docker run -it --link cf1mongo:mongo --rm mongo sh -p 26050:26050 -c "exec mongod --configsvr --smallfiles --nojournal --dbpath cfg/1 --port 26050 --fork --logpath cfg/1.log >/dev/null"
-    docker run -it --link mongo:mongo --rm mongo sh -p 26051:26051 -c "exec mongod --configsvr --smallfiles --nojournal --dbpath cfg/2 --port 26051 --fork --logpath cfg/2.log >/dev/null"
-	    docker run -it --link mongo:mongo --rm mongo sh -p 26052:26052 -c "exec mongod --configsvr --smallfiles --nojournal --dbpath cfg/3 --port 26052 --fork --logpath cfg/3.log >/dev/null"
+    docker run -it --link cf2mongo:mongo --rm mongo sh -p 26051:26051 -c "exec mongod --configsvr --smallfiles --nojournal --dbpath cfg/2 --port 26051 --fork --logpath cfg/2.log >/dev/null"
+	    docker run -it --link cf3mongo:mongo --rm mongo sh -p 26052:26052 -c "exec mongod --configsvr --smallfiles --nojournal --dbpath cfg/3 --port 26052 --fork --logpath cfg/3.log >/dev/null"
 
     echo "cfg1 26050" >> $tableOfServers
     echo "cfg2 26051" >> $tableOfServers

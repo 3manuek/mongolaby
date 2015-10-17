@@ -1,0 +1,9 @@
+cfg1 26050
+cfg2 26051
+cfg3 26052
+mongos 27001
+shard_1 26001
+shard_1 26002
+shard_1 26003
+shard_2 26004
+shard_2 26005
