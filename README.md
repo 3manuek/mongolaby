@@ -14,6 +14,12 @@ AWS support:
 
 https://crate.io/docker/machine/
 
+https://sebastianvoss.com/docker-mongodb-sharded-cluster.html
+https://hub.docker.com/r/gustavocms/mongodb/
+https://github.com/3manuek/mongo-docker
+http://jacksoncage.se/posts/2014/06/12/instant-mongodb-sharded-cluster-with-a-little-help-from-docker/
+https://hub.docker.com/r/jacksoncage/mongo/
+
 
 # Starting docs
 
